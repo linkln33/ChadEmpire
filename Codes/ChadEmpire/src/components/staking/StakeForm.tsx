@@ -1,0 +1,122 @@
+'use client';
+
+import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+interface StakeFormProps {
+  currentStake: number;
+  onClose: () => void;
+}
+
+export function StakeForm({ currentStake, onClose }: StakeFormProps) {
+  const { publicKey } = useWallet();
+  const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Mock wallet balance - in a real app this would come from your Solana program
+  const walletBalance = 5000;
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!publicKey || !amount || isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Simulate staking transaction
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In a real app, you would call your Solana program here
+      console.log(`Staking ${amount} $CHAD tokens`);
+      
+      // Close the form after successful stake
+      onClose();
+    } catch (error) {
+      console.error('Staking error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <div className="mt-4 bg-chad-dark/50 rounded-lg p-4">
+      <h3 className="text-lg font-semibold mb-4">Stake $CHAD Tokens</h3>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-sm text-gray-400 mb-1">Amount to Stake</label>
+          <div className="relative">
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount"
+              className="w-full bg-chad-dark border border-chad-primary/30 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-chad-primary/50"
+              min="1"
+              max={walletBalance}
+              required
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span className="text-gray-400">$CHAD</span>
+            </div>
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-gray-400">
+            <span>Balance: {walletBalance} $CHAD</span>
+            <button 
+              type="button" 
+              onClick={() => setAmount(walletBalance.toString())}
+              className="text-chad-primary hover:text-chad-primary/80"
+            >
+              Max
+            </button>
+          </div>
+        </div>
+        
+        <div className="bg-black/30 rounded-lg p-3 mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-400">Current Stake</span>
+            <span>{currentStake} $CHAD</span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-400">New Stake</span>
+            <span>{currentStake + (Number(amount) || 0)} $CHAD</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Spin Fee</span>
+            <span>5 $CHAD per spin</span>
+          </div>
+        </div>
+        
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 bg-transparent hover:bg-chad-dark/70 text-white font-semibold py-2 rounded-lg border border-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!amount || isLoading || Number(amount) <= 0 || Number(amount) > walletBalance}
+            className={`flex-1 bg-chad-primary hover:bg-chad-primary/90 text-white font-semibold py-2 rounded-lg transition-colors ${
+              (!amount || isLoading || Number(amount) <= 0 || Number(amount) > walletBalance) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Staking...
+              </span>
+            ) : (
+              'Stake'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

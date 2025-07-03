@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  walletAddress   String    @unique
+  username        String?
+  avatarUrl       String?
+  chadScore       Int       @default(0)
+  totalSpins      Int       @default(0)
+  totalWins       Int       @default(0)
+  totalYieldEarned Float    @default(0)
+  referralCode    String?   @unique
+  referredBy      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  stakes          Stake[]
+  spins           Spin[]
+  boosters        Booster[]
+  fragments       Fragment[]
+  lotteryTickets  LotteryTicket[]
+
+  @@index([walletAddress])
+  @@index([chadScore])
+}
+
+model Stake {
+  id                String    @id @default(uuid())
+  userId            String
+  amount            Float
+  stakedAt          DateTime  @default(now())
+  unstakeRequestedAt DateTime?
+  unstakedAt        DateTime?
+  penaltyAmount     Float     @default(0)
+  status            StakeStatus @default(ACTIVE)
+  transactionHash   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum StakeStatus {
+  ACTIVE
+  UNSTAKING
+  UNSTAKED
+}
+
+model Spin {
+  id              String    @id @default(uuid())
+  userId          String
+  spinType        SpinType  @default(DAILY)
+  result          SpinResult
+  yieldPercentage Float?
+  yieldAmount     Float?
+  consolationType ConsolationType?
+  consolationAmount Int?
+  boosterUsed     String?
+  transactionHash String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum SpinType {
+  DAILY
+  BONUS
+  PREMIUM
+}
+
+enum SpinResult {
+  WIN
+  CONSOLATION
+}
+
+enum ConsolationType {
+  LOTTERY_TICKET
+  CHAD_SCORE
+  BOOSTER_FRAGMENT
+  BONUS_SPIN
+}
+
+model Booster {
+  id              String    @id @default(uuid())
+  userId          String
+  mintAddress     String    @unique
+  boosterType     BoosterType
+  powerLevel      Int       @default(1)
+  usedAt          DateTime?
+  expiresAt       DateTime?
+  transactionHash String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([boosterType])
+  @@index([usedAt])
+}
+
+enum BoosterType {
+  YIELD_MULTIPLIER
+  LUCK_BOOST
+  BONUS_SPIN
+  JACKPOT_ACCESS
+}
+
+model Fragment {
+  id              String    @id @default(uuid())
+  userId          String
+  fragmentType    String
+  quantity        Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([fragmentType])
+}
+
+model LotteryDraw {
+  id              String    @id @default(uuid())
+  drawNumber      Int       @unique
+  drawTime        DateTime
+  jackpot         Float
+  winningNumbers  String
+  status          DrawStatus @default(PENDING)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  tickets         LotteryTicket[]
+
+  @@index([drawTime])
+  @@index([status])
+}
+
+enum DrawStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model LotteryTicket {
+  id              String    @id @default(uuid())
+  userId          String
+  lotteryDrawId   String?
+  ticketNumber    String
+  isWinner        Boolean   @default(false)
+  matchedNumbers  Int       @default(0)
+  prizeAmount     Float?
+  claimed         Boolean   @default(false)
+  transactionHash String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+  lotteryDraw     LotteryDraw? @relation(fields: [lotteryDrawId], references: [id])
+
+  @@index([userId])
+  @@index([lotteryDrawId])
+  @@index([isWinner])
+}
+
+model SystemStats {
+  id              String    @id @default(uuid())
+  totalUsers      Int       @default(0)
+  totalStaked     Float     @default(0)
+  totalSpins      Int       @default(0)
+  totalYieldPaid  Float     @default(0)
+  lotteryPool     Float     @default(0)
+  nextLotteryDraw DateTime?
+  updatedAt       DateTime  @updatedAt
+}
