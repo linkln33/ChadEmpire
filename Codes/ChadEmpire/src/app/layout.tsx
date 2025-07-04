@@ -5,6 +5,7 @@ import '@/styles/wallet-override.css'
 import { WalletProvider } from '@/components/wallet/WalletProvider'
 import Navigation from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
+import MusicPlayer from '@/components/music/MusicPlayer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -51,6 +52,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script src="/scripts/sticky-player.js" defer></script>
+      </head>
       <body className={`${inter.className} bg-gray-900 text-white min-h-screen flex flex-col`}>
         <WalletProvider>
           <div className="flex flex-col min-h-screen">

@@ -1,86 +1,44 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import TokenomicsChart from '@/components/charts/TokenomicsChart'
 import FairLaunchSection from '@/components/fair-launch/FairLaunchSection'
+import HeroText from '@/components/hero/HeroText'
+import HeroImage from '@/components/hero/HeroImage'
+import MusicPlayer from '@/components/music/MusicPlayer'
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-grow">
         {/* Hero Section */}
-        <section id="home" className="relative py-12 md:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section id="home" className="relative py-8 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-gradient-to-b from-chad-dark to-black opacity-90"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,255,225,0.05)_1px,transparent_1px)] bg-[length:24px_24px] opacity-30"></div>
           </div>
           
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-              <div className="lg:w-1/2 text-left">
-                <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text font-['Anton']">
-                  ChadEmpire
-                </h1>
-                <div className="flex items-center mb-4">
-                  <span className="text-2xl mr-2">🎭</span>
-                  <p className="text-xl md:text-2xl font-bold text-chad-gold">
-                    The Cult of Infinite Yield
-                  </p>
-                </div>
-                <p className="text-lg text-gray-300 mb-6 italic border-l-4 border-chad-pink pl-4">
-                  "In the barren wastelands of rugpulls and LARPing LPs, one giga-chad dared to farm... differently."
-                </p>
-                
-                <p className="text-lg text-gray-300 mb-6">
-                  "Chads don't just buy the dip — they yield farm it, stake it, and wreck paper hands. The Chad Warrior is the final form of the degen: no rugs, no burns, just pure community-backed dominance."
-                </p>
-                
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-start">
-                    <div className="text-chad-neon mr-3">⚡</div>
-                    <p className="text-gray-300">Chad is the eternal Yield Warrior sent by the RNG Gods to redistribute real returns to the faithful.</p>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="text-chad-pink mr-3">💪</div>
-                    <p className="text-gray-300">Every spin is a battle. Every yield is a flex. Every loss is a badge of honor.</p>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="text-chad-gold mr-3">👑</div>
-                    <p className="text-gray-300">You're not just farming. You're living the ChadLife™.</p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/game" className="px-8 py-4 bg-gradient-to-r from-chad-pink to-chad-neon text-black font-bold rounded-full hover:opacity-90 transition-opacity shadow-lg shadow-chad-pink/20">
-                    Start Spinning
-                  </Link>
-                  <Link href="/tokenomics" className="px-8 py-4 border border-chad-purple text-white rounded-full hover:bg-chad-purple/10 transition-all shadow-lg shadow-chad-purple/20">
-                    Tokenomics
-                  </Link>
-                </div>
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8">
+              <div className="lg:w-2/5 order-2 lg:order-1">
+                <HeroText />
               </div>
               
-              <div className="lg:w-1/2 relative mt-8 lg:mt-0">
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-chad-pink/20 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-chad-neon/20 rounded-full blur-3xl"></div>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-chad-pink/20 to-chad-neon/20 rounded-full blur-3xl"></div>
-                  <div className="relative z-10 flex justify-center items-center">
-                    <div className="relative w-full max-w-[108%] aspect-square" style={{ transform: 'scale(1.08)' }}>
-                      <Image 
-                        src="/images/chad-warrior.svg" 
-                        alt="Chad Warrior" 
-                        fill
-                        className="max-w-full h-auto drop-shadow-[0_0_15px_rgba(255,0,184,0.5)]"
-                        priority
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div className="lg:w-3/5 mb-6 sm:mb-8 lg:mb-0 lg:mt-0 order-1 lg:order-2">
+                <HeroImage />
               </div>
             </div>
+            
+
           </div>
         </section>
+        
+        {/* Music Player - Fixed position at bottom right */}
+        <div className="fixed bottom-8 right-8 z-50" id="music-player-container">
+          <MusicPlayer 
+            audioSrc="/music/Chad-EmpireTM.mp3" 
+            audioTitle="Chad Empire Mix" 
+            autoPlay={true}
+          />
+        </div>
         
         {/* Chad's Way Section */}
         <section id="chads-way" className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black to-chad-dark">
@@ -455,6 +413,8 @@ export default function Home() {
           </div>
         </section>
       </div>
+      
+      {/* Music Player is now in layout */}
     </main>
   )
 }
