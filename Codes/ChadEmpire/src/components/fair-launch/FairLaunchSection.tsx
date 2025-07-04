@@ -1,8 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ChadWalletButton } from '../wallet/ChadWalletButton';
+import SectionTitle from '../common/SectionTitle';
+import { DeferredRender } from '../../utils/performance';
+import OptimizedImage from '../common/OptimizedImage';
+import { motion } from 'framer-motion';
+
+// Lazy load components for better initial loading performance
+const WhitelistSystem = lazy(() => import('./WhitelistSystem'));
+const WhitelistLeaderboard = lazy(() => import('./WhitelistLeaderboard'));
 
 interface FairLaunchStats {
   launchDate: Date;
@@ -13,228 +21,435 @@ interface FairLaunchStats {
   totalTokens: number;
 }
 
+interface WhitelistStatus {
+  isWhitelisted: boolean;
+  tier: number;
+  maxAllocation: number;
+}
+
+interface DailyAllocation {
+  day: number;
+  date: Date;
+  supply: number;
+  percentSold: number;
+  isActive: boolean;
+  isSoldOut: boolean;
+  isComingSoon: boolean;
+}
+
 const FairLaunchSection: React.FC = () => {
   const { connected } = useWallet();
   const [solAmount, setSolAmount] = useState<string>('');
   const [isLaunched, setIsLaunched] = useState<boolean>(false);
+  const [whitelistStatus, setWhitelistStatus] = useState<WhitelistStatus | null>(null);
+  const [showWhitelistInfo, setShowWhitelistInfo] = useState<boolean>(true);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   
   // Mock data - would be fetched from blockchain in production
-  const launchStats: FairLaunchStats = {
+  const launchStats: FairLaunchStats = useMemo(() => ({
     launchDate: new Date('2025-08-01T00:00:00Z'),
     amountRaised: 2450,
     totalTarget: 10000,
     chadPrice: 0.00001,
     tokensRemaining: 200000000,
     totalTokens: 300000000
-  };
+  }), []);
   
-  const calculateChadAmount = (): number => {
+  // Mock data for 7-day allocation
+  const dailyAllocations: DailyAllocation[] = useMemo(() => {
+    const startDate = new Date('2025-08-01T00:00:00Z');
+    const totalSupply = 300000000; // 300M tokens
+    
+    // Generate random supply distribution for 7 days that adds up to totalSupply
+    const generateRandomSupplies = () => {
+      const randomValues = Array(7).fill(0).map(() => Math.random());
+      const sum = randomValues.reduce((a, b) => a + b, 0);
+      const normalizedValues = randomValues.map(v => v / sum);
+      return normalizedValues.map(v => Math.round(v * totalSupply));
+    };
+    
+    const supplies = generateRandomSupplies();
+    
+    return Array(7).fill(0).map((_, index) => {
+      const day = index + 1;
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + index);
+      
+      // Day 1 is sold out, day 2 is active, days 3-7 are coming soon
+      return {
+        day,
+        date,
+        supply: supplies[index],
+        percentSold: day === 1 ? 100 : day === 2 ? 45 : 0,
+        isActive: day === 2,
+        isSoldOut: day === 1,
+        isComingSoon: day > 2
+      };
+    });
+  }, []);
+  
+  // Memoize the CHAD amount calculation to prevent unnecessary recalculations
+  const chadAmount = useMemo(() => {
     const solValue = parseFloat(solAmount) || 0;
     return solValue / launchStats.chadPrice;
-  };
+  }, [solAmount, launchStats.chadPrice]);
   
-  const handleBuy = () => {
-    // Would connect to blockchain transaction in production
-    alert(`Buying ${calculateChadAmount().toLocaleString()} $CHAD tokens for ${solAmount} SOL`);
-  };
+  // Function to calculate CHAD amount (used in places where a function is needed)
+  const calculateChadAmount = useCallback((): number => {
+    const solValue = parseFloat(solAmount) || 0;
+    return solValue / launchStats.chadPrice;
+  }, [solAmount, launchStats.chadPrice]);
   
-  const handleClaim = () => {
+  // Handle buy action with proper type checking
+  const handleBuy = useCallback(() => {
     // Would connect to blockchain transaction in production
-    alert('Claiming your $CHAD tokens');
-  };
+    // Check whitelist status and allocation limits
+    if (whitelistStatus) {
+      const solValue = parseFloat(solAmount) || 0;
+      if (solValue <= 0) {
+        alert('Please enter a valid SOL amount');
+        return;
+      }
+      
+      if (solValue > whitelistStatus.maxAllocation) {
+        alert(`You can only contribute up to ${whitelistStatus.maxAllocation} SOL based on your tier`);
+        return;
+      }
+      
+      // In production, this would initiate a blockchain transaction
+      alert(`Processing purchase: ${solValue} SOL for ${calculateChadAmount()} CHAD tokens`);
+    } else {
+      alert('You need to be whitelisted to participate');
+    }
+  }, [whitelistStatus, solAmount, calculateChadAmount]);
+  
+  // Toggle whitelist info visibility
+  const toggleWhitelistInfo = useCallback(() => {
+    setShowWhitelistInfo(prev => !prev);
+  }, []);
+  
+  // Handle whitelist status change from WhitelistSystem component
+  const handleWhitelistStatusChange = useCallback((status: WhitelistStatus) => {
+    setWhitelistStatus(status);
+  }, []);
   
   // Calculate time remaining until launch
-  const calculateTimeRemaining = (): { days: number; hours: number; minutes: number; seconds: number } => {
+  const timeRemaining = useMemo(() => {
     const now = new Date();
-    const difference = launchStats.launchDate.getTime() - now.getTime();
+    const diff = launchStats.launchDate.getTime() - now.getTime();
     
-    if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    if (diff <= 0) {
+      setIsLaunched(true);
+      return { days: 0, hours: 0, minutes: 0 };
     }
     
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
-    return { days, hours, minutes, seconds };
-  };
+    return { days, hours, minutes };
+  }, [launchStats.launchDate]);
   
-  const timeRemaining = calculateTimeRemaining();
-  const progressPercentage = (launchStats.amountRaised / launchStats.totalTarget) * 100;
+  // Update timer every minute
+  useEffect(() => {
+    if (isLaunched) return;
+    
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (now >= launchStats.launchDate) {
+        setIsLaunched(true);
+        clearInterval(timer);
+      }
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, [isLaunched, launchStats.launchDate]);
   
-  return (
-    <section id="fair-launch" className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-chad-dark to-black">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">Fair Launch</span>
-        </h2>
-        <p className="text-center text-gray-300 mb-8 max-w-3xl mx-auto">
-          Join the Chad Empire early and secure your position as a founding Chad. Fair distribution, no team allocation.
-        </p>
+  // Memoize progress percentage calculation
+  const progressPercentage = useMemo(() => {
+    return Math.min(100, Math.round((launchStats.amountRaised / launchStats.totalTarget) * 100));
+  }, [launchStats.amountRaised, launchStats.totalTarget]);
+  
+  // Memoize tokens sold calculation
+  const tokensSold = useMemo(() => {
+    return launchStats.totalTokens - launchStats.tokensRemaining;
+  }, [launchStats.totalTokens, launchStats.tokensRemaining]);
+  
+  // Memoize tokens sold percentage
+  const tokensSoldPercentage = useMemo(() => {
+    return Math.round((tokensSold / launchStats.totalTokens) * 100);
+  }, [tokensSold, launchStats.totalTokens]);
+  
+  // Memoize the launch status section for better performance
+  const LaunchStatusSection = useMemo(() => (
+    <div className="bg-black/30 p-6 rounded-lg border border-gray-800 mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h3 className="text-xl font-bold mb-4 md:mb-0">
+          <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">
+            {isLaunched ? 'Fair Launch Live!' : 'Fair Launch Countdown'}
+          </span>
+        </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Stats & Countdown */}
-          <div className="bg-gradient-to-br from-chad-dark/80 to-black p-6 rounded-xl border border-gray-800 shadow-lg">
-            {/* Countdown Timer */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold mb-4 text-chad-neon text-center">Launch Countdown</h3>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-black/50 p-3 rounded-lg border border-chad-neon/30">
-                  <div className="text-3xl font-bold text-white">{timeRemaining.days}</div>
-                  <div className="text-xs text-gray-400">DAYS</div>
-                </div>
-                <div className="bg-black/50 p-3 rounded-lg border border-chad-neon/30">
-                  <div className="text-3xl font-bold text-white">{timeRemaining.hours}</div>
-                  <div className="text-xs text-gray-400">HOURS</div>
-                </div>
-                <div className="bg-black/50 p-3 rounded-lg border border-chad-neon/30">
-                  <div className="text-3xl font-bold text-white">{timeRemaining.minutes}</div>
-                  <div className="text-xs text-gray-400">MINUTES</div>
-                </div>
-                <div className="bg-black/50 p-3 rounded-lg border border-chad-neon/30">
-                  <div className="text-3xl font-bold text-white">{timeRemaining.seconds}</div>
-                  <div className="text-xs text-gray-400">SECONDS</div>
-                </div>
-              </div>
+        {!isLaunched && (
+          <div className="flex space-x-4 text-center">
+            <div className="bg-black/50 px-4 py-2 rounded-lg border border-gray-700">
+              <div className="text-2xl font-bold text-white">{timeRemaining.days}</div>
+              <div className="text-xs text-gray-400">Days</div>
             </div>
-            
-            {/* Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-300">Amount Raised</span>
-                <span className="text-chad-gold font-bold">{launchStats.amountRaised} SOL / {launchStats.totalTarget} SOL</span>
-              </div>
-              <div className="w-full bg-gray-800 rounded-full h-4 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-chad-pink to-chad-gold h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
-              </div>
+            <div className="bg-black/50 px-4 py-2 rounded-lg border border-gray-700">
+              <div className="text-2xl font-bold text-white">{timeRemaining.hours}</div>
+              <div className="text-xs text-gray-400">Hours</div>
             </div>
-            
-            {/* Token Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                <div className="text-sm text-gray-400">$CHAD Price</div>
-                <div className="text-xl font-bold text-chad-neon">{launchStats.chadPrice} SOL</div>
-              </div>
-              <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                <div className="text-sm text-gray-400">Tokens Remaining</div>
-                <div className="text-xl font-bold text-chad-neon">{(launchStats.tokensRemaining / 1000000).toFixed(1)}M</div>
-              </div>
+            <div className="bg-black/50 px-4 py-2 rounded-lg border border-gray-700">
+              <div className="text-2xl font-bold text-white">{timeRemaining.minutes}</div>
+              <div className="text-xs text-gray-400">Minutes</div>
             </div>
           </div>
+        )}
+      </div>
+      
+      <div className="mb-6">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-gray-400">Progress</span>
+          <span className="text-white font-bold">{progressPercentage}%</span>
+        </div>
+        <div className="w-full bg-gray-800 rounded-full h-2.5">
+          <div 
+            className="bg-gradient-to-r from-chad-gold to-chad-pink h-2.5 rounded-full" 
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-sm mt-2">
+          <span className="text-gray-400">{launchStats.amountRaised} SOL raised</span>
+          <span className="text-gray-400">Target: {launchStats.totalTarget} SOL</span>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-black/50 p-4 rounded-lg border border-gray-700">
+          <div className="text-gray-400 text-sm mb-1">CHAD Price</div>
+          <div className="text-xl font-bold text-white">{launchStats.chadPrice} SOL</div>
+        </div>
+        <div className="bg-black/50 p-4 rounded-lg border border-gray-700">
+          <div className="text-gray-400 text-sm mb-1">Tokens Remaining</div>
+          <div className="text-xl font-bold text-white">{(launchStats.tokensRemaining / 1000000).toFixed(1)}M</div>
+        </div>
+        <div className="bg-black/50 p-4 rounded-lg border border-gray-700">
+          <div className="text-gray-400 text-sm mb-1">Tokens Sold</div>
+          <div className="text-xl font-bold text-white">{tokensSoldPercentage}%</div>
+        </div>
+      </div>
+      
+      {isLaunched && (
+        <div className="bg-black/50 p-6 rounded-lg border border-gray-700">
+          <h4 className="text-lg font-bold text-white mb-4">Buy CHAD Tokens</h4>
           
-          {/* Buy Interface */}
-          <div className="bg-gradient-to-br from-chad-dark/80 to-black p-6 rounded-xl border border-gray-800 shadow-lg">
-            <h3 className="text-xl font-bold mb-6 text-chad-neon text-center">
-              {isLaunched ? 'Claim Your $CHAD Tokens' : 'Buy $CHAD Tokens'}
-            </h3>
-            
-            {!connected ? (
-              <div className="text-center py-8">
-                <p className="text-gray-300 mb-6">Connect your wallet to participate in the fair launch</p>
-                <div className="flex justify-center">
-                  <ChadWalletButton />
+          {!connected ? (
+            <div className="text-center py-4">
+              <p className="text-gray-300 mb-4">Connect your wallet to participate</p>
+              <ChadWalletButton />
+            </div>
+          ) : !whitelistStatus?.isWhitelisted ? (
+            <div className="text-center py-4">
+              <p className="text-red-500 font-bold mb-2">Not Whitelisted</p>
+              <p className="text-gray-300">You need to be whitelisted to participate in the fair launch.</p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <label className="block text-gray-400 text-sm mb-1">Amount (SOL)</label>
+                  <input
+                    type="number"
+                    value={solAmount}
+                    onChange={(e) => setSolAmount(e.target.value)}
+                    placeholder="0.0"
+                    min="0"
+                    max={whitelistStatus?.maxAllocation || 0}
+                    className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-chad-neon"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Max: {whitelistStatus?.maxAllocation} SOL</p>
+                </div>
+                <div className="mx-4 text-gray-500">→</div>
+                <div className="flex-1">
+                  <label className="block text-gray-400 text-sm mb-1">CHAD Tokens</label>
+                  <div className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white">
+                    {chadAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
                 </div>
               </div>
-            ) : isLaunched ? (
-              <div className="text-center py-8">
-                <p className="text-gray-300 mb-6">Your allocation: <span className="text-chad-gold font-bold">125,000 $CHAD</span></p>
-                <button 
-                  onClick={handleClaim}
-                  className="bg-gradient-to-r from-chad-pink to-chad-neon text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-chad-neon/50 transition-all duration-300 w-full"
-                >
-                  Claim $CHAD Tokens
-                </button>
+              
+              <button
+                onClick={handleBuy}
+                disabled={!parseFloat(solAmount) || parseFloat(solAmount) > (whitelistStatus?.maxAllocation || 0)}
+                className="w-full bg-gradient-to-r from-chad-gold to-chad-pink text-black font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Buy CHAD Tokens
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  ), [isLaunched, timeRemaining, progressPercentage, launchStats, tokensSoldPercentage, connected, whitelistStatus, solAmount, chadAmount, handleBuy]);
+  
+  // Memoize the 7-day allocation cards
+  const AllocationCardsSection = useMemo(() => (
+    <div className="mb-8">
+      <h3 className="text-xl font-bold mb-3">
+        <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">
+          7-Day Random Allocation
+        </span>
+      </h3>
+      
+      <p className="text-gray-300 mb-6 max-w-3xl">
+        Each day of our 7-day fair launch has a random allocation of CHAD tokens. Participate during active days to secure your tokens before they're gone!
+      </p>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        {dailyAllocations.map((allocation) => (
+          <motion.div 
+            key={allocation.day}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            className={`
+              bg-gradient-to-br ${allocation.isActive ? 'from-chad-dark/90 to-black/90' : 'from-black/80 to-black/60'} 
+              p-4 rounded-xl border-2 cursor-pointer transition-all
+              ${allocation.isActive ? 'border-lime-400' : 
+                allocation.isSoldOut ? 'border-red-500' : 
+                'border-yellow-500/30'}
+            `}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <div className="bg-black/50 px-2 py-0.5 rounded-full border border-gray-700">
+                <span className="text-white font-bold text-sm">Day {allocation.day}</span>
               </div>
-            ) : (
-              <div>
-                <div className="mb-6">
-                  <label className="block text-gray-400 mb-2">Enter SOL Amount</label>
-                  <div className="relative">
-                    <input 
-                      type="number" 
-                      value={solAmount}
-                      onChange={(e) => setSolAmount(e.target.value)}
-                      placeholder="0.0"
-                      className="w-full bg-black/50 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-chad-neon focus:border-transparent"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">SOL</div>
+              {allocation.isActive && (
+                <div className="bg-lime-500/20 px-2 py-0.5 rounded-full border border-lime-500/50">
+                  <span className="text-lime-400 font-bold text-xs">ACTIVE</span>
+                </div>
+              )}
+              {allocation.isSoldOut && (
+                <div className="bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/50">
+                  <span className="text-red-500 font-bold text-xs">SOLD OUT</span>
+                </div>
+              )}
+              {allocation.isComingSoon && (
+                <div className="bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/30">
+                  <span className="text-yellow-500/70 font-bold text-xs">SOON</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="text-gray-400 text-xs mb-0.5">Date</div>
+            <div className="text-white font-medium text-sm mb-2">
+              {allocation.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+            
+            <div className="text-gray-400 text-xs mb-0.5">Supply</div>
+            <div className="text-base font-bold text-white mb-2">
+              {(allocation.supply / 1000000).toFixed(1)}M
+            </div>
+            
+            {allocation.isActive && (
+              <>
+                <div className="mb-2">
+                  <div className="flex justify-between text-xs mb-0.5">
+                    <span className="text-gray-400 text-xs">Sold</span>
+                    <span className="text-white text-xs">{allocation.percentSold}%</span>
                   </div>
-                  <div className="mt-2 text-right text-gray-400">
-                    You will receive: <span className="text-chad-gold">{calculateChadAmount().toLocaleString()} $CHAD</span>
+                  <div className="w-full bg-gray-800 rounded-full h-1">
+                    <div 
+                      className="bg-gradient-to-r from-lime-400 to-green-500 h-1 rounded-full" 
+                      style={{ width: `${allocation.percentSold}%` }}
+                    ></div>
                   </div>
                 </div>
                 
-                <button 
-                  onClick={handleBuy}
-                  disabled={!solAmount || parseFloat(solAmount) <= 0}
-                  className={`bg-gradient-to-r from-chad-pink to-chad-neon text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 w-full ${
-                    !solAmount || parseFloat(solAmount) <= 0 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:shadow-chad-neon/50'
-                  }`}
+                <button
+                  disabled={!connected || !whitelistStatus?.isWhitelisted}
+                  className="w-full mt-1 bg-gradient-to-r from-lime-400 to-green-500 text-black text-xs font-bold py-1.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Buy $CHAD Tokens
+                  Participate
                 </button>
+              </>
+            )}
+            
+            {allocation.isSoldOut && (
+              <div className="w-full mt-1 bg-red-500/20 text-red-500 text-xs font-bold py-1.5 rounded-lg text-center">
+                Sold Out
               </div>
             )}
-          </div>
+            
+            {allocation.isComingSoon && (
+              <div className="w-full mt-1 bg-yellow-500/10 text-yellow-500/70 text-xs font-bold py-1.5 rounded-lg text-center border border-yellow-500/20">
+                Coming Soon
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  ), [dailyAllocations, connected, whitelistStatus]);
+
+  return (
+    <section className="py-16">
+      <div className="container mx-auto px-4">
+        <div className="mb-12 text-center">
+          <SectionTitle>
+            <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">
+              Fair Launch
+            </span>
+          </SectionTitle>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            Join the ChadEmpire fair launch with tiered allocation based on your SOL holdings and social engagement.
+          </p>
         </div>
         
-        {/* Leaderboard */}
-        <div className="bg-gradient-to-br from-chad-dark/80 to-black p-6 rounded-xl border border-gray-800 shadow-lg">
-          <h3 className="text-xl font-bold mb-6 text-center">
-            <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">Top Chad Buyers</span>
-          </h3>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="py-3 px-4 text-left text-gray-400">Rank</th>
-                  <th className="py-3 px-4 text-left text-gray-400">Wallet</th>
-                  <th className="py-3 px-4 text-right text-gray-400">Amount</th>
-                  <th className="py-3 px-4 text-right text-gray-400">Bonus</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {[
-                  { rank: 1, wallet: '8xH7...9pQr', amount: 500, bonus: '10%' },
-                  { rank: 2, wallet: '3jK9...2mNb', amount: 350, bonus: '7%' },
-                  { rank: 3, wallet: '5tG2...7vXz', amount: 275, bonus: '5%' },
-                  { rank: 4, wallet: '9pL4...1cVb', amount: 200, bonus: '3%' },
-                  { rank: 5, wallet: '2qR8...6dKj', amount: 150, bonus: '2%' }
-                ].map((entry, index) => (
-                  <tr key={index} className="hover:bg-black/30 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center">
-                        <div className={`
-                          w-6 h-6 rounded-full flex items-center justify-center mr-2
-                          ${index === 0 ? 'bg-chad-gold text-black' : 
-                            index === 1 ? 'bg-gray-300 text-black' : 
-                            index === 2 ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400'}
-                        `}>
-                          {entry.rank}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-gray-300">{entry.wallet}</td>
-                    <td className="py-3 px-4 text-right text-white font-bold">{entry.amount} SOL</td>
-                    <td className="py-3 px-4 text-right text-chad-neon">{entry.bonus}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Launch Status - Memoized for better performance */}
+        <DeferredRender>
+          {LaunchStatusSection}
+        </DeferredRender>
+        
+        {/* 7-Day Allocation Cards */}
+        <DeferredRender>
+          {AllocationCardsSection}
+        </DeferredRender>
+        
+        {/* Whitelist System - Lazy loaded with Suspense */}
+        <div className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold">
+              <span className="bg-gradient-to-r from-chad-gold to-chad-pink text-transparent bg-clip-text">Whitelist System</span>
+            </h3>
+            <button 
+              onClick={toggleWhitelistInfo}
+              className="text-sm bg-black/30 border border-gray-700 rounded-lg px-3 py-1 text-gray-300 hover:text-white hover:border-gray-500 transition-colors"
+            >
+              {showWhitelistInfo ? 'Hide Details' : 'Show Details'}
+            </button>
           </div>
           
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Top buyers receive bonus $CHAD tokens and exclusive NFT rewards
-            </p>
-          </div>
+          {showWhitelistInfo && (
+            <div className="mb-8">
+              <Suspense fallback={
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-chad-neon"></div>
+                </div>
+              }>
+                <WhitelistSystem onWhitelistStatusChange={handleWhitelistStatusChange} />
+              </Suspense>
+            </div>
+          )}
+          
+          {/* Whitelist Leaderboard */}
+          <Suspense fallback={
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-chad-neon"></div>
+            </div>
+          }>
+            <WhitelistLeaderboard className="mb-12" />
+          </Suspense>
         </div>
       </div>
     </section>

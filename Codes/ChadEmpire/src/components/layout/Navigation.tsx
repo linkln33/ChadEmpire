@@ -64,30 +64,31 @@ const Navigation: React.FC = () => {
   ];
   
   return (
-    <nav className="bg-chad-dark border-b border-gray-800 shadow-lg shadow-chad-pink/10">
-      <div className="container mx-auto">
+    <nav className="sticky top-0 z-50 border-b border-gray-800 shadow-lg shadow-chad-pink/10 backdrop-blur-sm bg-black/30">
+      <div className="container mx-auto px-0">
         <div className="flex justify-between items-center h-16">
           {/* PART 1: Logo and Brand (Left) */}
-          <div className="flex items-center pl-2">
+          <div className="flex items-center pl-0 -ml-12">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text font-['Anton']">
+              <span className="text-2xl font-bold gradient-text" style={{ fontFamily: "'Game Of Squids', sans-serif" }}>
                 ChadEmpire
               </span>
             </Link>
           </div>
           
           {/* PART 2: Navigation Links (Middle) - Centered */}
-          <div className="hidden md:flex items-center justify-center">
-            <div className="flex items-center space-x-6">
+          <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-4">
               {navItems.map((item) => (
                 <a
                   key={item.name}
                   href={item.path}
                   onClick={(e) => handleNavClick(e, item.path)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${pathname === '/' && window.location.hash === item.path.substring(1)
-                    ? 'text-white bg-gradient-to-r from-chad-pink/20 to-chad-purple/20 border-b-2 border-chad-pink'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-chad-neon'
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${pathname === '/' && typeof window !== 'undefined' && window.location.hash === item.path.substring(1)
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-chad-primary to-chad-accent border-b-2 border-chad-primary'
+                    : 'text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-chad-primary hover:to-chad-accent'
                     }`}
+                  style={{ fontFamily: "'Game Of Squids', sans-serif" }}
                 >
                   {item.name}
                 </a>
@@ -200,7 +201,7 @@ const Navigation: React.FC = () => {
                 href={item.path}
                 onClick={(e) => handleNavClick(e, item.path)}
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === '/' && window.location.hash === item.path.substring(1)
+                  pathname === '/' && typeof window !== 'undefined' && window.location.hash === item.path.substring(1)
                     ? 'bg-gray-900 text-white'
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}

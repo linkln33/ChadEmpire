@@ -83,11 +83,13 @@ const TypewriterQuotes: React.FC = () => {
           {currentEmoji}
         </div>
         <div className="overflow-hidden flex-1">
-          <p className="text-lg sm:text-xl md:text-2xl">
-            <span className="bg-gradient-to-r from-chad-pink via-chad-gold to-chad-neon bg-clip-text text-transparent font-bold">
+          <p className="text-base sm:text-lg md:text-xl">
+            <span className="bg-gradient-to-r from-chad-pink via-chad-gold to-chad-neon bg-clip-text text-transparent font-bold" style={{ fontFamily: "'Starshines', sans-serif" }}>
               {displayText}
             </span>
-            <span className="animate-pulse text-chad-neon ml-0.5">|</span>
+            <span className="animate-pulse text-chad-neon ml-0.5" style={{ fontFamily: "'Starshines', sans-serif" }}>
+              |
+            </span>
           </p>
         </div>
       </div>

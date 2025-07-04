@@ -1,6 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Future Tech Font */
+@font-face {
+  font-family: 'Future Tech';
+  src: url('/fonts/future-tech.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Super Modern Black Font */
+@font-face {
+  font-family: 'Super Modern Black';
+  src: url('/fonts/super-modern-black.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Game Of Squids Font */
+@font-face {
+  font-family: 'Game Of Squids';
+  src: url('/fonts/Game Of Squids.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Bing Bam Boum Font */
+@font-face {
+  font-family: 'Bing Bam Boum';
+  src: url('/fonts/Bing Bam Boum.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Komigo Font */
+@font-face {
+  font-family: 'Komigo';
+  src: url('/fonts/Komigo3D-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* White On Black Font */
+@font-face {
+  font-family: 'White On Black';
+  src: url('/fonts/White On Black.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Starshines Font */
+@font-face {
+  font-family: 'Starshines';
+  src: url('/fonts/Starshines.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
  
 @layer base {
   :root {

@@ -3,123 +3,133 @@ import TokenomicsChart from '@/components/charts/TokenomicsChart'
 import FairLaunchSection from '@/components/fair-launch/FairLaunchSection'
 import HeroText from '@/components/hero/HeroText'
 import HeroImage from '@/components/hero/HeroImage'
-import MusicPlayer from '@/components/music/MusicPlayer'
+import SectionTitle from '@/components/common/SectionTitle'
+import MusicPlayerWrapper from '@/components/music/MusicPlayerWrapper'
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col">
       <div className="flex-grow">
         {/* Hero Section */}
-        <section id="home" className="relative py-8 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-chad-dark to-black opacity-90"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,255,225,0.05)_1px,transparent_1px)] bg-[length:24px_24px] opacity-30"></div>
-          </div>
-          
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8">
-              <div className="lg:w-2/5 order-2 lg:order-1">
-                <HeroText />
-              </div>
-              
-              <div className="lg:w-3/5 mb-6 sm:mb-8 lg:mb-0 lg:mt-0 order-1 lg:order-2">
-                <HeroImage />
+        <section id="home" className="relative py-8 md:py-16 lg:py-20 px-2 sm:px-4 lg:px-6 overflow-visible">
+            
+            <div className="max-w-7xl mx-auto relative z-10">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-2 md:gap-4">
+                <div className="lg:w-2/5 order-2 lg:order-1 pr-4">
+                  <HeroText />
+                </div>
+                
+                <div className="lg:w-3/5 mb-6 sm:mb-8 lg:mb-0 lg:mt-0 order-1 lg:order-2 pl-6">
+                  <HeroImage />
+                </div>
               </div>
             </div>
-            
-
-          </div>
-        </section>
+          </section>
         
-        {/* Music Player - Fixed position at bottom right */}
-        <div className="fixed bottom-8 right-8 z-50" id="music-player-container">
-          <MusicPlayer 
-            audioSrc="/music/Chad-EmpireTM.mp3" 
-            audioTitle="Chad Empire Mix" 
-            autoPlay={true}
-          />
-          <div className="text-xs text-chad-pink/70 mt-1 text-center animate-pulse">
-            Click anywhere to unmute
-          </div>
-        </div>
+        {/* Music Player - Client-side only to avoid hydration errors */}
+        <MusicPlayerWrapper />
         
         {/* Chad's Way Section */}
-        <section id="chads-way" className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black to-chad-dark">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
-              <span className="bg-gradient-to-r from-chad-pink to-chad-neon text-transparent bg-clip-text">Chad's Way</span>
-            </h2>
-            <p className="text-center text-gray-300 mb-12 max-w-3xl mx-auto text-lg">The path to becoming a true Chad warrior</p>
+        <section id="chads-way" className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+          {/* Colorful background elements */}
+          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-gradient-to-r from-chad-pink/20 to-chad-primary/10 blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-gradient-to-r from-chad-neon/20 to-chad-purple/10 blur-3xl"></div>
+          
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="flex flex-col items-center mb-12">
+              <SectionTitle className="text-center text-4xl md:text-5xl relative">
+                <span className="bg-gradient-to-r from-chad-pink via-chad-neon to-chad-primary text-transparent bg-clip-text">Chad's Way</span>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-chad-pink via-chad-neon to-chad-primary rounded-full mx-auto w-24"></div>
+              </SectionTitle>
+              <p className="text-center text-gray-300 max-w-3xl mx-auto text-lg">The path to becoming a true Chad warrior</p>
+            </div>
             
-            <div className="bg-gray-900/60 backdrop-blur-md border border-chad-neon/30 rounded-xl p-8 shadow-lg shadow-chad-neon/20 w-full mx-auto">
+            <div className="bg-gradient-to-br from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-md border border-chad-neon/30 rounded-xl p-8 shadow-lg shadow-chad-neon/20 w-full mx-auto">
               <div className="space-y-12">
                 {/* Step 1 */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                  <div className="flex-shrink-0 w-16 h-16 bg-chad-dark border-2 border-chad-neon rounded-full flex items-center justify-center text-2xl font-bold text-chad-neon">
-                    1
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative">
+                  {/* Animated glow effect behind step indicator */}
+                  <div className="absolute -left-4 top-0 w-24 h-24 bg-chad-primary/20 rounded-full blur-xl animate-pulse hidden md:block"></div>
+                  
+                  <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-chad-primary to-chad-pink border-2 border-white/20 rounded-full flex items-center justify-center text-2xl font-bold text-white relative shadow-lg shadow-chad-primary/30">
+                    <div className="absolute inset-0 rounded-full bg-white/10"></div>
+                    <span className="relative z-10">1</span>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-3">Buy $CHAD – Join the army.</h3>
+                  
+                  <div className="relative">
+                    <h3 className="text-2xl font-bold mb-3">
+                      <span className="bg-gradient-to-r from-chad-primary to-chad-pink text-transparent bg-clip-text">Buy $CHAD</span> – Join the army.
+                    </h3>
                     <p className="text-gray-300 text-lg">
                       Become part of the Chad Empire by acquiring $CHAD tokens. Your journey to wealth and glory begins with joining the ranks of the Chad army. The more tokens you hold, the stronger your position in the empire.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-3">
-                      <div className="bg-gray-800/50 border border-chad-neon/20 rounded-lg px-4 py-2">
-                        <span className="text-chad-neon font-medium">Token Address:</span>
+                      <div className="bg-gradient-to-r from-gray-800/70 to-gray-900/70 border border-chad-primary/30 rounded-lg px-4 py-2 shadow-lg shadow-chad-primary/20">
+                        <span className="bg-gradient-to-r from-chad-primary to-chad-accent text-transparent bg-clip-text font-medium">Token Address:</span>
                         <span className="ml-2 text-gray-300">CHAD1234...5678</span>
                       </div>
                       <button 
-                        className="bg-transparent border-2 border-chad-neon text-chad-neon hover:text-white rounded-lg px-4 py-2 transition-all duration-300"
-                        style={{ boxShadow: '0 0 10px rgba(0, 255, 247, 0.3)' }}
+                        className="relative overflow-hidden group bg-gradient-to-r from-chad-primary/10 to-chad-pink/10 border-2 border-chad-primary hover:border-chad-pink rounded-lg px-6 py-2 transition-all duration-300"
                       >
-                        Buy on DEX
+                        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-chad-primary to-chad-pink opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                        <span className="relative z-10 bg-gradient-to-r from-chad-primary to-chad-pink text-transparent bg-clip-text font-medium group-hover:text-white transition-all duration-300">Buy on DEX</span>
+                        <span className="absolute -bottom-10 left-0 right-0 h-40 bg-gradient-to-t from-chad-primary/20 to-transparent blur-xl transform group-hover:translate-y-[-25px] transition-all duration-500"></span>
                       </button>
                     </div>
                   </div>
                 </div>
                 
                 {/* Step 2 */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                  <div className="flex-shrink-0 w-16 h-16 bg-chad-dark border-2 border-chad-neon rounded-full flex items-center justify-center text-2xl font-bold text-chad-neon">
-                    2
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative">
+                  {/* Animated glow effect behind step indicator */}
+                  <div className="absolute -left-4 top-0 w-24 h-24 bg-chad-neon/20 rounded-full blur-xl animate-pulse hidden md:block"></div>
+                  
+                  <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-chad-neon to-chad-accent border-2 border-white/20 rounded-full flex items-center justify-center text-2xl font-bold text-white relative shadow-lg shadow-chad-neon/30">
+                    <div className="absolute inset-0 rounded-full bg-white/10"></div>
+                    <span className="relative z-10">2</span>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-3">Stake like a warlord – Bigger stake = Bigger weight.</h3>
+                  
+                  <div className="relative">
+                    <h3 className="text-2xl font-bold mb-3">
+                      <span className="bg-gradient-to-r from-chad-neon to-chad-accent text-transparent bg-clip-text">Stake like a warlord</span> – Bigger stake = Bigger weight.
+                    </h3>
                     <p className="text-gray-300 text-lg">
                       True Chads don't just hold, they stake. Staking your $CHAD tokens increases your influence and rewards. The more you stake, the greater your weight in the ecosystem and the higher your potential rewards.
                     </p>
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-gray-800/50 border border-chad-neon/20 rounded-lg p-4">
-                        <div className="text-xl font-bold text-chad-neon mb-1">Staking Tiers</div>
-                        <div className="text-gray-300">
-                          <div className="flex justify-between">
-                            <span>Chad Recruit</span>
-                            <span>1,000+ $CHAD</span>
+                      <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 border border-chad-neon/30 rounded-lg p-4 shadow-lg shadow-chad-neon/10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-chad-neon/5 rounded-full blur-xl"></div>
+                        <div className="text-xl font-bold bg-gradient-to-r from-chad-neon to-chad-accent text-transparent bg-clip-text mb-2">Staking Tiers</div>
+                        <div className="text-gray-300 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Chad Recruit</span>
+                            <span className="bg-gradient-to-r from-gray-300 to-white text-transparent bg-clip-text">1,000+ $CHAD</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Chad Warrior</span>
-                            <span>10,000+ $CHAD</span>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Chad Warrior</span>
+                            <span className="bg-gradient-to-r from-chad-neon to-white text-transparent bg-clip-text">10,000+ $CHAD</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Chad Warlord</span>
-                            <span>100,000+ $CHAD</span>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Chad Warlord</span>
+                            <span className="bg-gradient-to-r from-chad-primary to-chad-accent text-transparent bg-clip-text font-bold">100,000+ $CHAD</span>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-gray-800/50 border border-chad-neon/20 rounded-lg p-4">
-                        <div className="text-xl font-bold text-chad-neon mb-1">Weight Multipliers</div>
-                        <div className="text-gray-300">
-                          <div className="flex justify-between">
-                            <span>Base</span>
-                            <span>1x</span>
+                      <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 border border-chad-neon/30 rounded-lg p-4 shadow-lg shadow-chad-neon/10 relative overflow-hidden">
+                        <div className="absolute bottom-0 left-0 w-20 h-20 bg-chad-neon/5 rounded-full blur-xl"></div>
+                        <div className="text-xl font-bold bg-gradient-to-r from-chad-neon to-chad-accent text-transparent bg-clip-text mb-2">Weight Multipliers</div>
+                        <div className="text-gray-300 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Base</span>
+                            <span className="bg-gradient-to-r from-gray-300 to-white text-transparent bg-clip-text">1x</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Warrior</span>
-                            <span>1.5x</span>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Warrior</span>
+                            <span className="bg-gradient-to-r from-chad-neon to-white text-transparent bg-clip-text">1.5x</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Warlord</span>
-                            <span>2x</span>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Warlord</span>
+                            <span className="bg-gradient-to-r from-chad-primary to-chad-accent text-transparent bg-clip-text font-bold">2x</span>
                           </div>
                         </div>
                       </div>
@@ -128,41 +138,67 @@ export default function Home() {
                 </div>
                 
                 {/* Step 3 */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                  <div className="flex-shrink-0 w-16 h-16 bg-chad-dark border-2 border-chad-neon rounded-full flex items-center justify-center text-2xl font-bold text-chad-neon">
-                    3
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative">
+                  {/* Animated glow effect behind step indicator */}
+                  <div className="absolute -left-4 top-0 w-24 h-24 bg-chad-pink/20 rounded-full blur-xl animate-pulse hidden md:block"></div>
+                  
+                  <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-chad-pink to-chad-purple border-2 border-white/20 rounded-full flex items-center justify-center text-2xl font-bold text-white relative shadow-lg shadow-chad-pink/30">
+                    <div className="absolute inset-0 rounded-full bg-white/10"></div>
+                    <span className="relative z-10">3</span>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-3">Choose your fate – Steady 0.5% daily or SPIN for up to 3%.</h3>
+                  
+                  <div className="relative">
+                    <h3 className="text-2xl font-bold mb-3">
+                      <span className="bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text">Choose your fate</span> – Steady 0.5% daily or SPIN for up to 3%.
+                    </h3>
                     <p className="text-gray-300 text-lg">
                       The Chad Empire rewards the brave. Choose between a steady 0.5% daily return on your staked tokens, or test your luck with the SPIN feature for a chance to earn up to 3% in a single day. The choice is yours, but true Chads know when to take risks.
                     </p>
                     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="bg-gray-800/50 border border-chad-neon/20 rounded-lg p-6 text-center">
-                        <div className="text-2xl font-bold text-chad-neon mb-2">STEADY</div>
-                        <div className="text-4xl font-bold text-white mb-3">0.5%</div>
-                        <div className="text-gray-300">Daily guaranteed return</div>
-                        <div className="mt-4">
-                          <button 
-                            className="inline-block bg-transparent border-2 border-chad-neon text-chad-neon hover:text-white rounded-lg px-6 py-2 transition-all duration-300"
-                            style={{ boxShadow: '0 0 10px rgba(0, 255, 247, 0.3)' }}
-                          >
-                            Stake Now
-                          </button>
-                        </div>
-                      </div>
-                      <div className="bg-gray-800/50 border border-chad-pink/30 rounded-lg p-6 text-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-chad-pink/10 to-chad-primary/10"></div>
+                      {/* STEADY Option */}
+                      <div className="bg-gradient-to-br from-gray-800/70 via-gray-900/70 to-gray-800/70 border border-chad-neon/30 rounded-lg p-6 text-center relative overflow-hidden group hover:shadow-lg hover:shadow-chad-neon/20 transition-all duration-300">
+                        {/* Background effects */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-chad-neon/40 to-transparent"></div>
+                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-chad-neon/10 rounded-full blur-2xl group-hover:bg-chad-neon/20 transition-all duration-500"></div>
+                        
                         <div className="relative">
-                          <div className="text-2xl font-bold text-chad-pink mb-2">SPIN</div>
-                          <div className="text-4xl font-bold text-white mb-3">UP TO 3%</div>
-                          <div className="text-gray-300">Daily potential return</div>
+                          <div className="text-2xl font-bold bg-gradient-to-r from-chad-neon to-chad-accent text-transparent bg-clip-text mb-2">STEADY</div>
+                          <div className="text-5xl font-bold text-white mb-3 relative inline-block">
+                            <span className="bg-gradient-to-r from-white via-chad-neon to-white text-transparent bg-clip-text">0.5%</span>
+                            <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-chad-neon to-transparent"></div>
+                          </div>
+                          <div className="text-gray-300 mb-6">Daily guaranteed return</div>
                           <div className="mt-4">
                             <button 
-                              className="inline-block bg-transparent border-2 border-chad-pink text-chad-pink hover:text-white rounded-lg px-6 py-2 transition-all duration-300"
-                              style={{ boxShadow: '0 0 10px rgba(255, 0, 184, 0.3)' }}
+                              className="relative overflow-hidden group bg-gradient-to-r from-gray-800 to-gray-900 border-2 border-chad-neon hover:border-white rounded-lg px-6 py-2 transition-all duration-300"
                             >
-                              Spin Now
+                              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-chad-neon/20 to-chad-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                              <span className="relative z-10 bg-gradient-to-r from-chad-neon to-chad-accent text-transparent bg-clip-text font-medium group-hover:text-white transition-all duration-300">Stake Now</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* SPIN Option */}
+                      <div className="bg-gradient-to-br from-gray-800/70 via-gray-900/70 to-gray-800/70 border border-chad-pink/30 rounded-lg p-6 text-center relative overflow-hidden group hover:shadow-lg hover:shadow-chad-pink/20 transition-all duration-300">
+                        {/* Background effects */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-chad-pink/40 to-transparent"></div>
+                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-chad-pink/10 rounded-full blur-2xl group-hover:bg-chad-pink/20 transition-all duration-500"></div>
+                        <div className="absolute -right-4 top-4 w-16 h-16 bg-chad-purple/20 rounded-full blur-xl animate-pulse"></div>
+                        
+                        <div className="relative">
+                          <div className="text-2xl font-bold bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text mb-2">SPIN</div>
+                          <div className="text-5xl font-bold text-white mb-3 relative inline-block">
+                            <span className="bg-gradient-to-r from-white via-chad-pink to-white text-transparent bg-clip-text">UP TO 3%</span>
+                            <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-chad-pink to-transparent"></div>
+                          </div>
+                          <div className="text-gray-300 mb-6">Daily potential return</div>
+                          <div className="mt-4">
+                            <button 
+                              className="relative overflow-hidden group bg-gradient-to-r from-gray-800 to-gray-900 border-2 border-chad-pink hover:border-white rounded-lg px-6 py-2 transition-all duration-300"
+                            >
+                              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-chad-pink/20 to-chad-purple/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                              <span className="relative z-10 bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text font-medium group-hover:text-white transition-all duration-300">Spin Now</span>
                             </button>
                           </div>
                         </div>
@@ -176,11 +212,11 @@ export default function Home() {
         </section>
         
         {/* Boosters Section */}
-        <section id="boosters" className="py-16 px-4 sm:px-6 lg:px-8 bg-black">
+        <section id="boosters" className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            <SectionTitle className="text-center">
               <span className="bg-gradient-to-r from-chad-pink to-chad-neon text-transparent bg-clip-text">Boosters</span>
-            </h2>
+            </SectionTitle>
             <p className="text-center text-gray-300 mb-8 max-w-3xl mx-auto">
               Supercharge your Chad experience with these powerful boosters that increase your chances and rewards.
             </p>
@@ -222,11 +258,11 @@ export default function Home() {
         </section>
         
         {/* Lottery Section */}
-        <section id="lottery" className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-chad-dark to-black">
+        <section id="lottery" className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            <SectionTitle className="text-center">
               <span className="bg-gradient-to-r from-chad-pink to-chad-neon text-transparent bg-clip-text">Lottery</span>
-            </h2>
+            </SectionTitle>
             <p className="text-center text-gray-300 mb-8 max-w-3xl mx-auto">
               Test your luck in the weekly Chad Lottery with massive token prizes and exclusive rewards.
             </p>
@@ -309,11 +345,11 @@ export default function Home() {
         </section>
         
         {/* Tokenomics Section */}
-        <section id="tokenomics" className="py-16 px-4 sm:px-6 lg:px-8 bg-chad-dark">
+        <section id="tokenomics" className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            <SectionTitle className="text-center">
               <span className="bg-gradient-to-r from-chad-pink to-chad-neon text-transparent bg-clip-text">Tokenomics</span>
-            </h2>
+            </SectionTitle>
             <p className="text-center text-gray-300 mb-8 max-w-3xl mx-auto">
               Total Supply: <span className="text-chad-neon font-bold">1,000,000,000</span> $CHAD tokens
             </p>
@@ -378,7 +414,7 @@ export default function Home() {
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <span className="text-chad-pink mr-2">•</span>
-                  <p className="text-gray-300">Buy/Sell fees (5%) → directly feeds the Rewards Pool for sustainable yields</p>
+                  <p className="text-gray-300">Buy/Sell fees (10%) → directly feeds the Rewards Pool for sustainable yields</p>
                 </li>
                 <li className="flex items-start">
                   <span className="text-chad-pink mr-2">•</span>
@@ -401,8 +437,7 @@ export default function Home() {
         <FairLaunchSection />
         
         {/* CTA Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-chad-dark to-black relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(170,0,255,0.03)_1px,transparent_1px)] bg-[length:20px_20px] opacity-30"></div>
+        <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
           <div className="max-w-3xl mx-auto text-center relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               Ready to join the <span className="bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text">Empire?</span>
@@ -416,8 +451,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-      
-      {/* Music Player is now in layout */}
     </main>
   )
 }

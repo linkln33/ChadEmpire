@@ -6,9 +6,10 @@ import TypewriterQuotes from './TypewriterQuotes';
 
 const HeroText: React.FC = () => {
   return (
-    <div className="text-left">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-chad-pink to-chad-purple text-transparent bg-clip-text font-['Anton']">
-        ChadEmpire
+    <div className="text-left w-full overflow-visible">
+      <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-3 md:mb-4 gradient-text leading-none" style={{ fontFamily: "'Game Of Squids', sans-serif" }}>
+        CHAD<br />
+        EMPIRE
       </h1>
       <div className="flex items-center mb-3 md:mb-4">
         <span className="text-xl sm:text-2xl mr-2">🎭</span>
