@@ -13,7 +13,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ audioSrc, audioTitle = 'Chad 
   const [volume, setVolume] = useState(0.5);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // Starts minimized by default
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -42,37 +42,67 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ audioSrc, audioTitle = 'Chad 
   
   // Handle autoplay when component mounts with fallback strategies
   useEffect(() => {
-    if (autoPlay && audioRef.current) {
-      // First try muted autoplay (more likely to be allowed by browsers)
-      const audio = audioRef.current;
+    if (!autoPlay || !audioRef.current) return;
+    
+    // First try muted autoplay (more likely to be allowed by browsers)
+    const audio = audioRef.current;
+    
+    // Function to handle user interaction for unmuting
+    const handleUserInteraction = () => {
+      if (audio && audio.muted) {
+        audio.muted = false;
+        audio.volume = volume; // Restore volume after unmuting
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('touchstart', handleUserInteraction);
+        document.removeEventListener('keydown', handleUserInteraction);
+      }
+    };
+    
+    // Wait for document to be fully loaded
+    if (document.readyState === 'complete') {
+      initializeAudio();
+    } else {
+      window.addEventListener('load', initializeAudio, { once: true });
+    }
+    
+    function initializeAudio() {
+      // Set muted state first
       audio.muted = true;
       
+      // Store user's session preference in sessionStorage
+      const hasInteracted = sessionStorage.getItem('userHasInteracted');
+      
       // Small delay to ensure browser is ready
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         // Try to play muted first
         audio.play().then(() => {
-          // If muted play works, show expanded player and unmute after user interaction
-          setIsExpanded(true);
+          // If muted play works, set playing state but keep minimized
           setIsPlaying(true);
           
-          // Add one-time click listener to the document to unmute
-          const handleFirstInteraction = () => {
+          // If user has previously interacted in this session, unmute
+          if (hasInteracted === 'true') {
             audio.muted = false;
-            document.removeEventListener('click', handleFirstInteraction);
-          };
-          document.addEventListener('click', handleFirstInteraction);
+          } else {
+            // Listen for user interaction to unmute
+            document.addEventListener('click', handleUserInteraction);
+            document.addEventListener('touchstart', handleUserInteraction);
+            document.addEventListener('keydown', handleUserInteraction);
+          }
           
         }).catch(error => {
-          console.error("Even muted autoplay failed:", error);
-          // If even muted autoplay fails, just expand the player to make it visible
-          setIsExpanded(true);
-          setIsPlaying(false);
+          console.error("Autoplay failed:", error);
+          // If autoplay fails, we'll wait for user interaction
         });
       }, 1000);
-      
-      return () => clearTimeout(timer);
     }
-  }, [autoPlay]);
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      window.removeEventListener('load', initializeAudio);
+    };
+  }, [autoPlay, volume]);
 
   // Handle play/pause
   const togglePlay = () => {
@@ -82,6 +112,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ audioSrc, audioTitle = 'Chad 
     if (isPlaying) {
       audio.pause();
     } else {
+      // Store that user has interacted with the player
+      sessionStorage.setItem('userHasInteracted', 'true');
+      
+      // Make sure audio is not muted when user explicitly presses play
+      if (audio.muted) {
+        audio.muted = false;
+        audio.volume = volume;
+      }
+      
       audio.play().catch(error => {
         console.error("Audio playback error:", error);
       });
