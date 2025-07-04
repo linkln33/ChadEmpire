@@ -9,6 +9,8 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 // Import the styles for the wallet adapter
 import '@solana/wallet-adapter-react-ui/styles.css';
+// Import our override styles to hide the default button
+import '@/styles/wallet-override.css';
 
 export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'
