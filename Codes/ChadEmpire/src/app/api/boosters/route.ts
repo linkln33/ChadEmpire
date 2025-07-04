@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
+import { getSupabase } from '@/lib/supabase';
 
 // Middleware to verify authentication
-const verifyAuth = (request: NextRequest) => {
-  const token = cookies().get('chadempire_auth')?.value;
+const verifyAuth = async (request: NextRequest) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('chadempire_auth')?.value;
   
   if (!token) {
     return { authenticated: false, error: 'Authentication required' };
@@ -23,56 +25,50 @@ const verifyAuth = (request: NextRequest) => {
 
 // Get user's boosters and fragments
 export async function GET(request: NextRequest) {
-  const auth = verifyAuth(request);
+  const auth = await verifyAuth(request);
   
   if (!auth.authenticated) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
   
   try {
-    // In a real app, fetch from database
-    // For now, we'll return mock data
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
     
-    // Mock boosters
-    const mockBoosters = [
-      {
-        id: 'booster-1',
-        mintAddress: `${Math.random().toString(36).substring(2, 15)}`,
-        boosterType: 'yield_multiplier',
-        powerLevel: 2,
-        usedAt: null
-      },
-      {
-        id: 'booster-2',
-        mintAddress: `${Math.random().toString(36).substring(2, 15)}`,
-        boosterType: 'luck_boost',
-        powerLevel: 1,
-        usedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
-      },
-      {
-        id: 'booster-3',
-        mintAddress: `${Math.random().toString(36).substring(2, 15)}`,
-        boosterType: 'bonus_spin',
-        powerLevel: 1,
-        usedAt: null
-      }
-    ];
+    // Get user ID from wallet address
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('wallet_address', auth.walletAddress as string)
+      .single() as { data: any, error: any };
+      
+    if (userError || !userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
     
-    // Mock fragments
-    const mockFragments = [
-      {
-        id: 'fragment-1',
-        fragmentType: 'yield_multiplier',
-        quantity: 3
-      },
-      {
-        id: 'fragment-2',
-        fragmentType: 'jackpot_access',
-        quantity: 5
-      }
-    ];
+    // Fetch user's boosters
+    const { data: boosters, error: boostersError } = await supabase
+      .from('boosters')
+      .select('*')
+      .eq('user_id', userData.id) as { data: any[], error: any };
+      
+    if (boostersError) {
+      throw boostersError;
+    }
     
-    // Mock marketplace boosters
+    // Fetch user's fragments
+    const { data: fragments, error: fragmentsError } = await supabase
+      .from('fragments')
+      .select('*')
+      .eq('user_id', userData.id) as { data: any[], error: any };
+      
+    if (fragmentsError) {
+      throw fragmentsError;
+    }
+    
+    // Define marketplace boosters (these are static and not stored in the database)
     const marketplaceBoosters = [
       {
         id: 'market-1',
@@ -81,7 +77,7 @@ export async function GET(request: NextRequest) {
         image: '/images/boosters/yield-multiplier.png',
         price: 250,
         rarity: 'rare',
-        boosterType: 'yield_multiplier',
+        boosterType: 'YIELD_MULTIPLIER',
         powerLevel: 2,
       },
       {
@@ -91,7 +87,7 @@ export async function GET(request: NextRequest) {
         image: '/images/boosters/lucky-charm.png',
         price: 175,
         rarity: 'uncommon',
-        boosterType: 'luck_boost',
+        boosterType: 'LUCK_BOOST',
         powerLevel: 1,
       },
       {
@@ -101,7 +97,7 @@ export async function GET(request: NextRequest) {
         image: '/images/boosters/bonus-spin.png',
         price: 100,
         rarity: 'common',
-        boosterType: 'bonus_spin',
+        boosterType: 'BONUS_SPIN',
         powerLevel: 1,
       },
       {
@@ -111,14 +107,29 @@ export async function GET(request: NextRequest) {
         image: '/images/boosters/jackpot-enhancer.png',
         price: 350,
         rarity: 'epic',
-        boosterType: 'jackpot_access',
+        boosterType: 'JACKPOT_ACCESS',
         powerLevel: 3,
       },
     ];
     
+    // Transform snake_case to camelCase for frontend consumption
+    const formattedBoosters = boosters.map(booster => ({
+      id: booster.id,
+      mintAddress: booster.mint_address,
+      boosterType: (booster.booster_type as string)?.toLowerCase(),
+      powerLevel: booster.power_level,
+      usedAt: booster.used_at
+    }));
+    
+    const formattedFragments = fragments.map(fragment => ({
+      id: fragment.id,
+      fragmentType: (fragment.fragment_type as string)?.toLowerCase(),
+      quantity: fragment.quantity
+    }));
+    
     return NextResponse.json({
-      boosters: mockBoosters,
-      fragments: mockFragments,
+      boosters: formattedBoosters,
+      fragments: formattedFragments,
       marketplace: marketplaceBoosters
     });
   } catch (error) {
@@ -129,17 +140,33 @@ export async function GET(request: NextRequest) {
 
 // Use a booster
 export async function POST(request: NextRequest) {
-  const auth = verifyAuth(request);
+  const auth = await verifyAuth(request);
   
   if (!auth.authenticated) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
   
   try {
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
+    
+    // Get user ID from wallet address
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('wallet_address', auth.walletAddress as string)
+      .single() as { data: any, error: any };
+      
+    if (userError || !userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    
     const body = await request.json();
     const { boosterId, action } = body;
     
-    if (!boosterId) {
+    if (!boosterId && action !== 'purchase') {
       return NextResponse.json({ error: 'Booster ID is required' }, { status: 400 });
     }
     
@@ -148,19 +175,70 @@ export async function POST(request: NextRequest) {
     }
     
     if (action === 'use') {
-      // In a real app, verify the booster exists, belongs to the user, and hasn't been used
+      // Verify the booster exists, belongs to the user, and hasn't been used
+      const { data: booster, error: boosterError } = await supabase
+        .from('boosters')
+        .select('*')
+        .eq('id', boosterId)
+        .eq('user_id', userData.id)
+        .is('used_at', null)
+        .single() as { data: any, error: any };
+        
+      if (boosterError || !booster) {
+        return NextResponse.json({ 
+          error: 'Booster not found or already used' 
+        }, { status: 404 });
+      }
       
-      // Mock response for using a booster
+      // Mark the booster as used
+      const now = new Date().toISOString();
+      const { error: updateError } = await supabase
+        .from('boosters')
+        .update({ used_at: now })
+        .eq('id', boosterId);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Determine effect based on booster type
+      let effect = {};
+      
+      if (booster.booster_type === 'YIELD_MULTIPLIER') {
+        effect = {
+          type: 'yield_multiplier',
+          multiplier: 1 + (Number(booster.power_level) * 0.5), // Power level 1 = 1.5x, 2 = 2x, etc.
+          duration: '5 spins'
+        };
+      } else if (booster.booster_type === 'LUCK_BOOST') {
+        effect = {
+          type: 'luck_boost',
+          multiplier: 1 + (Number(booster.power_level) * 0.1), // Power level 1 = 1.1x, 2 = 1.2x, etc.
+          duration: '24 hours'
+        };
+      } else if (booster.booster_type === 'JACKPOT_ACCESS') {
+        effect = {
+          type: 'jackpot_access',
+          multiplier: 1 + (Number(booster.power_level) * 1.0), // Power level 1 = 2x, 2 = 3x, etc.
+          duration: '3 spins'
+        };
+      } else if (booster.booster_type === 'BONUS_SPIN') {
+        effect = {
+          type: 'bonus_spin',
+          spins: 1,
+          duration: 'immediate'
+        };
+      }
+      
       return NextResponse.json({
         success: true,
         booster: {
-          id: boosterId,
-          usedAt: new Date(),
-          effect: {
-            type: 'yield_multiplier',
-            multiplier: 1.5,
-            duration: '5 spins'
-          }
+          id: booster.id,
+          mintAddress: booster.mint_address,
+          boosterType: (booster.booster_type as string)?.toLowerCase(),
+          powerLevel: booster.power_level,
+          usedAt: now,
+          effect
         },
         message: 'Booster activated successfully!'
       });
@@ -171,20 +249,63 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Booster type and price are required' }, { status: 400 });
       }
       
-      // In a real app, verify the user has enough tokens and process the purchase
+      // Verify the user has enough tokens
+      const { data: userStats, error: statsError } = await supabase
+        .from('users')
+        .select('chad_score')
+        .eq('id', userData.id)
+        .single() as { data: any, error: any };
+        
+      if (statsError || !userStats) {
+        return NextResponse.json({ error: 'Failed to fetch user stats' }, { status: 500 });
+      }
       
-      // Generate a new booster
-      const newBooster = {
-        id: `booster-${uuidv4()}`,
-        mintAddress: `${Math.random().toString(36).substring(2, 15)}`,
-        boosterType,
-        powerLevel: Math.min(Math.ceil(price / 100), 4), // Higher price = higher power level, max 4
-        usedAt: null
-      };
+      if (Number(userStats.chad_score) < price) {
+        return NextResponse.json({ 
+          error: 'Insufficient CHAD score to purchase this booster' 
+        }, { status: 400 });
+      }
+      
+      // Deduct the price from user's CHAD score
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          chad_score: supabase.rpc('decrement', { value: price }) as any 
+        })
+        .eq('id', userData.id);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Create a new booster
+      const powerLevel = Math.min(Math.ceil(price / 100), 4); // Higher price = higher power level, max 4
+      
+      const { data: newBooster, error: insertError } = await supabase
+        .from('boosters')
+        .insert({
+          user_id: userData.id,
+          mint_address: `booster-${uuidv4()}`,
+          booster_type: boosterType.toUpperCase(),
+          power_level: powerLevel,
+          used_at: null
+        })
+        .select()
+        .single() as { data: any, error: any };
+        
+      if (insertError) {
+        throw insertError;
+      }
       
       return NextResponse.json({
         success: true,
-        booster: newBooster,
+        booster: {
+          id: newBooster.id,
+          mintAddress: newBooster.mint_address,
+          boosterType: (newBooster.booster_type as string)?.toLowerCase(),
+          powerLevel: newBooster.power_level,
+          usedAt: null
+        },
         message: 'Booster purchased successfully!'
       });
     } else if (action === 'mint') {
@@ -196,37 +317,85 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
       
-      // In a real app, verify the user has enough fragments and process the minting
+      // Verify the user has enough fragments
+      const { data: fragment, error: fragmentError } = await supabase
+        .from('fragments')
+        .select('*')
+        .eq('user_id', userData.id)
+        .eq('fragment_type', fragmentType.toUpperCase())
+        .single() as { data: any, error: any };
+        
+      if (fragmentError || !fragment) {
+        return NextResponse.json({ 
+          error: 'Fragment type not found in your collection' 
+        }, { status: 404 });
+      }
       
-      // Generate a new booster based on fragment type
-      const boosterTypes = ['yield_multiplier', 'luck_boost', 'bonus_spin', 'jackpot_access'];
-      const randomType = fragmentType.includes('yield') 
-        ? 'yield_multiplier' 
-        : fragmentType.includes('luck') 
-          ? 'luck_boost' 
-          : fragmentType.includes('spin') 
-            ? 'bonus_spin' 
-            : fragmentType.includes('jackpot') 
-              ? 'jackpot_access' 
-              : boosterTypes[Math.floor(Math.random() * boosterTypes.length)];
+      if (Number(fragment.quantity) < 5) {
+        return NextResponse.json({ 
+          error: `You need 5 fragments to mint a booster, but you only have ${fragment.quantity}` 
+        }, { status: 400 });
+      }
       
-      // Determine power level (more common fragments = lower power)
-      const powerLevel = Math.min(Math.max(1, Math.ceil(Math.random() * 3)), 3);
-      
-      // Create new booster
-      const newBooster = {
-        id: `booster-${uuidv4()}`,
-        mintAddress: `${Math.random().toString(36).substring(2, 15)}`,
-        boosterType: randomType,
-        powerLevel,
-        usedAt: null
+      // Map fragment type to booster type
+      const fragmentToBoosterMap: Record<string, string> = {
+        'YIELD': 'YIELD_MULTIPLIER',
+        'LUCK': 'LUCK_BOOST',
+        'JACKPOT': 'JACKPOT_ACCESS',
+        'BONUS': 'BONUS_SPIN'
       };
+      
+      const boosterType = fragmentToBoosterMap[fragmentType.toUpperCase()] || 'YIELD_MULTIPLIER';
+      
+      // Determine power level (rarer fragments = higher power)
+      const rarityMap: Record<string, number> = {
+        'YIELD': 2,
+        'LUCK': 1,
+        'JACKPOT': 3,
+        'BONUS': 1
+      };
+      
+      const powerLevel = rarityMap[fragmentType.toUpperCase()] || 1;
+      
+      // Begin transaction
+      // 1. Reduce fragment count
+      const { error: updateError } = await supabase
+        .from('fragments')
+        .update({ quantity: Number(fragment.quantity) - 5 })
+        .eq('id', fragment.id);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // 2. Create new booster
+      const { data: newBooster, error: insertError } = await supabase
+        .from('boosters')
+        .insert({
+          user_id: userData.id,
+          mint_address: `booster-${uuidv4()}`,
+          booster_type: boosterType,
+          power_level: powerLevel,
+          used_at: null
+        })
+        .select()
+        .single() as { data: any, error: any };
+        
+      if (insertError) {
+        throw insertError;
+      }
       
       return NextResponse.json({
         success: true,
-        booster: newBooster,
+        booster: {
+          id: newBooster.id,
+          mintAddress: newBooster.mint_address,
+          boosterType: (newBooster.booster_type as string)?.toLowerCase(),
+          powerLevel: newBooster.power_level,
+          usedAt: null
+        },
         fragmentsUsed: 5,
-        remainingFragments: quantity - 5,
+        remainingFragments: Number(fragment.quantity) - 5,
         message: 'Booster minted successfully!'
       });
     }

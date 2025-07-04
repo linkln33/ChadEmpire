@@ -4,9 +4,7 @@ import * as bs58 from 'bs58';
 import { sign } from 'tweetnacl';
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
-
-// In a real app, this would be stored in a database
-const nonceStore: Record<string, { nonce: string; expiry: number }> = {};
+import { getSupabase } from '@/lib/supabase';
 
 // Generate a nonce for the user to sign
 export async function GET(request: NextRequest) {
@@ -28,8 +26,24 @@ export async function GET(request: NextRequest) {
     const nonce = uuidv4();
     const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
     
-    // Store the nonce
-    nonceStore[walletAddress] = { nonce, expiry };
+    // Store the nonce in Supabase
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
+    
+    // Store auth nonce in a nonces table (we'll need to create this table in Supabase)
+    const { error } = await supabase
+      .from('auth_nonces')
+      .upsert({
+        wallet_address: walletAddress,
+        nonce: nonce,
+        expires_at: new Date(expiry).toISOString(),
+      });
+      
+    if (error) {
+      throw error;
+    }
     
     return NextResponse.json({ 
       nonce,
@@ -51,15 +65,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Wallet address and signature are required' }, { status: 400 });
     }
     
-    // Check if we have a nonce for this wallet
-    const nonceData = nonceStore[walletAddress];
-    if (!nonceData) {
+    // Get the nonce from Supabase
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
+    
+    // Get the nonce for this wallet
+    const { data: nonceData, error: nonceError } = await supabase
+      .from('auth_nonces')
+      .select('nonce, expires_at')
+      .eq('wallet_address', walletAddress)
+      .single() as { data: any, error: any };
+    
+    if (nonceError || !nonceData) {
       return NextResponse.json({ error: 'No authentication request found for this wallet' }, { status: 400 });
     }
     
     // Check if the nonce has expired
-    if (nonceData.expiry < Date.now()) {
-      delete nonceStore[walletAddress];
+    const expiryTime = new Date(nonceData.expires_at as string).getTime();
+    if (expiryTime < Date.now()) {
+      // Delete expired nonce
+      await supabase
+        .from('auth_nonces')
+        .delete()
+        .eq('wallet_address', walletAddress);
+        
       return NextResponse.json({ error: 'Authentication request expired, please try again' }, { status: 400 });
     }
     
@@ -80,13 +111,52 @@ export async function POST(request: NextRequest) {
       }
       
       // Clean up the nonce
-      delete nonceStore[walletAddress];
+      await supabase
+        .from('auth_nonces')
+        .delete()
+        .eq('wallet_address', walletAddress);
       
-      // In a real app, you would create or update the user in the database here
+      // Create or get user from database
+      const { data: existingUser, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('wallet_address', walletAddress)
+        .single() as { data: any, error: any };
       
-      // Set a JWT token in cookies (in a real app, use a proper JWT library)
+      let user;
+      
+      if (userError || !existingUser) {
+        // Create new user
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            wallet_address: walletAddress,
+            username: null,
+            avatar_url: `https://api.dicebear.com/7.x/personas/svg?seed=${walletAddress}`,
+            chad_score: 0,
+            total_spins: 0,
+            total_wins: 0,
+            total_yield_earned: 0,
+            referral_code: 'CHAD' + walletAddress.substring(0, 8),
+          })
+          .select()
+          .single() as { data: any, error: any };
+          
+        if (createError) {
+          throw createError;
+        }
+        
+        user = newUser;
+      } else {
+        user = existingUser;
+      }
+      
+      // Create a session using Supabase Auth
+      // Note: In a real implementation, we'd use Supabase Auth's custom JWT
+      // For now, we'll still use our cookie-based approach
       const token = `mock_jwt_${walletAddress}_${Date.now()}`;
-      cookies().set('chadempire_auth', token, {
+      const cookieStore = await cookies();
+      cookieStore.set('chadempire_auth', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -97,12 +167,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         user: {
-          walletAddress,
-          username: null, // In a real app, fetch from database
-          chadScore: 0,
-          totalSpins: 0,
-          totalWins: 0,
-          totalYieldEarned: 0,
+          id: user.id,
+          walletAddress: user.wallet_address,
+          username: user.username,
+          avatarUrl: user.avatar_url,
+          chadScore: user.chad_score,
+          totalSpins: user.total_spins,
+          totalWins: user.total_wins,
+          totalYieldEarned: user.total_yield_earned,
+          referralCode: user.referral_code,
         }
       });
     } catch (error) {

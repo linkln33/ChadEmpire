@@ -26,10 +26,10 @@ export function WalletButton() {
   return (
     <div className="relative">
       {publicKey ? (
-        <div className="flex items-center shadow-lg shadow-chad-primary/30">
+        <div className="flex items-center rounded-lg overflow-hidden backdrop-blur-sm border-2 border-chad-neon" style={{ boxShadow: '0 0 10px rgba(0, 255, 247, 0.7), 0 0 20px rgba(0, 255, 247, 0.4)' }}>
           <button
             onClick={() => setVisible(true)}
-            className="bg-chad-dark border border-chad-primary/50 text-white rounded-l-full py-2 px-4 flex items-center hover:bg-chad-primary/20 transition-colors shadow-inner shadow-chad-primary/20 backdrop-blur-sm"
+            className="bg-transparent text-white rounded-l-lg py-2 px-4 flex items-center hover:bg-chad-neon/10 transition-all duration-300 backdrop-blur-sm"
           >
             <span className="mr-2 text-chad-neon font-medium">
               {wallet?.adapter.name || 'Wallet'}
@@ -38,7 +38,7 @@ export function WalletButton() {
           </button>
           <button
             onClick={copyAddress}
-            className="bg-chad-dark border-y border-r border-chad-primary/50 text-white rounded-none py-2 px-2 hover:bg-chad-primary/20 transition-colors shadow-inner shadow-chad-primary/20"
+            className="bg-transparent border-l border-chad-neon/50 text-white rounded-none py-2 px-2 hover:bg-chad-neon/10 transition-all duration-300"
             title="Copy address"
           >
             {copied ? (
@@ -54,7 +54,7 @@ export function WalletButton() {
           </button>
           <button
             onClick={disconnect}
-            className="bg-chad-dark border-y border-r border-chad-primary/50 text-white rounded-r-full py-2 px-2 hover:bg-chad-primary/20 transition-colors shadow-inner shadow-chad-primary/20"
+            className="bg-transparent border-l border-chad-neon/50 text-white rounded-r-lg py-2 px-2 hover:bg-chad-neon/10 transition-all duration-300"
             title="Disconnect"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -65,8 +65,8 @@ export function WalletButton() {
       ) : (
         <button
           onClick={() => setVisible(true)}
-          className="bg-chad-primary hover:bg-chad-primary/90 text-black font-bold py-2 px-6 rounded-full transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg shadow-chad-primary/30 border border-chad-neon/30 backdrop-blur-sm animate-pulse-slow"
-          style={{ boxShadow: '0 0 10px #FF6B35, 0 0 20px rgba(255, 107, 53, 0.3)' }}
+          className="bg-transparent text-chad-neon hover:text-white font-bold py-2.5 px-7 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 border-2 border-chad-neon backdrop-blur-sm animate-pulse-slow"
+          style={{ boxShadow: '0 0 10px rgba(0, 255, 247, 0.7), 0 0 20px rgba(0, 255, 247, 0.4)', textShadow: '0 0 5px rgba(0, 255, 247, 0.5)' }}
         >
           Connect Wallet
         </button>
