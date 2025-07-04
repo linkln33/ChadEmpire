@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import '@/styles/wallet-override.css'
 import { WalletProvider } from '@/components/wallet/WalletProvider'
 import Navigation from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'

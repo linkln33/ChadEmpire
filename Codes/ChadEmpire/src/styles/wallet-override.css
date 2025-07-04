@@ -1,0 +1,10 @@
+/* Hide the default Solana wallet adapter buttons */
+.wallet-adapter-button-trigger,
+.wallet-adapter-button {
+  display: none !important;
+}
+
+/* Only show our custom ChadWalletButton */
+.wallet-adapter-modal-wrapper {
+  z-index: 1000;
+}
