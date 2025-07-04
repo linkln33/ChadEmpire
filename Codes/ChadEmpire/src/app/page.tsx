@@ -38,6 +38,9 @@ export default function Home() {
             audioTitle="Chad Empire Mix" 
             autoPlay={true}
           />
+          <div className="text-xs text-chad-pink/70 mt-1 text-center animate-pulse">
+            Click anywhere to unmute
+          </div>
         </div>
         
         {/* Chad's Way Section */}

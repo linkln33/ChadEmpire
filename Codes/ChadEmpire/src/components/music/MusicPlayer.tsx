@@ -40,17 +40,34 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ audioSrc, audioTitle = 'Chad 
     };
   }, [volume]);
   
-  // Handle autoplay when component mounts
+  // Handle autoplay when component mounts with fallback strategies
   useEffect(() => {
     if (autoPlay && audioRef.current) {
+      // First try muted autoplay (more likely to be allowed by browsers)
+      const audio = audioRef.current;
+      audio.muted = true;
+      
       // Small delay to ensure browser is ready
       const timer = setTimeout(() => {
-        audioRef.current?.play().catch(error => {
-          console.error("Autoplay failed:", error);
-          // Most browsers require user interaction before autoplay
-          setIsExpanded(true); // At least expand the player to make it more visible
+        // Try to play muted first
+        audio.play().then(() => {
+          // If muted play works, show expanded player and unmute after user interaction
+          setIsExpanded(true);
+          setIsPlaying(true);
+          
+          // Add one-time click listener to the document to unmute
+          const handleFirstInteraction = () => {
+            audio.muted = false;
+            document.removeEventListener('click', handleFirstInteraction);
+          };
+          document.addEventListener('click', handleFirstInteraction);
+          
+        }).catch(error => {
+          console.error("Even muted autoplay failed:", error);
+          // If even muted autoplay fails, just expand the player to make it visible
+          setIsExpanded(true);
+          setIsPlaying(false);
         });
-        setIsPlaying(true);
       }, 1000);
       
       return () => clearTimeout(timer);
