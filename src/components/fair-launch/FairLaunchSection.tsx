@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ChadWalletButton } from '../wallet/ChadWalletButton';
 import SectionTitle from '../common/SectionTitle';
-import { DeferredRender } from '../../utils/performance';
+import { DeferredRender } from '../../utils/performance.tsx';
 import OptimizedImage from '../common/OptimizedImage';
 import { motion } from 'framer-motion';
 

@@ -7,7 +7,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { formatWalletAddress } from '@/lib/solana';
 
 export const ChadWalletButton: React.FC = () => {
-  const { wallets, select, wallet, disconnect, connecting, connected, publicKey } = useWallet();
+  const { wallets, select, disconnect, connecting, connected, publicKey } = useWallet();
   const { visible, setVisible } = useWalletModal();
   const [showInfo, setShowInfo] = useState(false);
 

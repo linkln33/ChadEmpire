@@ -111,7 +111,7 @@ export function StakeCard({ stakeData }: StakeCardProps) {
         </div>
       ) : (
         <div className="space-y-6">
-          <p className="text-gray-400">You haven't staked any $CHAD tokens yet. Stake to start spinning and earning yield!</p>
+          <p className="text-gray-400">You haven&apos;t staked any $CHAD tokens yet. Stake to start spinning and earning yield!</p>
           
           <button
             onClick={() => setShowStakeForm(true)}

@@ -5,10 +5,12 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useUserStore } from '@/stores/userStore';
 import { BoosterCard } from '@/components/boosters/BoosterCard';
 import { FragmentProgress } from '@/components/boosters/FragmentProgress';
+import { useRouter } from 'next/navigation';
 
 export default function BoostersPage() {
   const { publicKey } = useWallet();
   const { boosters, fragments } = useUserStore();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'my_boosters' | 'fragments' | 'marketplace'>('my_boosters');
   
   // Mock marketplace boosters
@@ -201,7 +203,7 @@ export default function BoostersPage() {
                   <p className="text-gray-400 mb-6">Earn fragments as consolation prizes when spinning the wheel</p>
                   <button 
                     className="bg-chad-primary hover:bg-chad-primary/90 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                    onClick={() => window.location.href = '/play'}
+                    onClick={() => router.push('/play')}
                   >
                     Spin to Earn
                   </button>

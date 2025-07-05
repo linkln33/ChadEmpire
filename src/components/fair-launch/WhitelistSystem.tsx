@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ChadWalletButton } from '../wallet/ChadWalletButton';
 import SectionTitle from '../common/SectionTitle';
-import { DeferredRender } from '../../utils/performance';
+import { DeferredRender } from '../../utils/performance.tsx';
 
 // Tier definitions based on SOL holdings
 const TIERS = [

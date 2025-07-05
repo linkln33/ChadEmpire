@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 interface SpinWheelProps {
   isSpinning: boolean;
@@ -28,7 +27,7 @@ export function SpinWheel({ isSpinning }: SpinWheelProps) {
       
       return () => clearTimeout(timer);
     }
-  }, [isSpinning]);
+  }, [isSpinning, rotation]);
 
   // Define the wheel segments - in a real app these would be dynamically generated
   // based on the actual probabilities and rewards

@@ -77,7 +77,7 @@ const TypewriterQuotes: React.FC = () => {
   const currentEmoji = quotes[currentQuoteIndex].emoji;
 
   return (
-    <div className="mb-6 mt-6" ref={containerRef}>
+    <div className="mb-3 mt-6" ref={containerRef}>
       <div className="flex bg-black/30 p-4 rounded-lg shadow-inner shadow-chad-pink/20 h-[100px] sm:h-[120px]">
         <div className="text-3xl mr-3 flex-shrink-0 self-start mt-1 animate-bounce">
           {currentEmoji}

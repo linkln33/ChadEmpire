@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import TypewriterQuotes from './TypewriterQuotes';
+import { FaTwitter, FaTelegram } from 'react-icons/fa';
 
 const HeroText: React.FC = () => {
   return (
@@ -24,13 +25,35 @@ const HeroText: React.FC = () => {
       {/* Animated Typewriter Quotes */}
       <TypewriterQuotes />
       
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:justify-start">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:justify-start mt-2">
         <Link href="/game" className="w-[70%] sm:w-auto mx-auto sm:mx-0 px-6 sm:px-8 py-3 sm:py-4 text-center bg-gradient-to-r from-chad-pink to-chad-neon text-black font-bold rounded-full hover:opacity-90 transition-opacity shadow-lg shadow-chad-pink/20">
           Start Spinning
         </Link>
         <Link href="/tokenomics" className="w-[70%] sm:w-auto mx-auto sm:mx-0 px-6 sm:px-8 py-3 sm:py-4 text-center border border-chad-purple text-white rounded-full hover:bg-chad-purple/10 transition-all shadow-lg shadow-chad-purple/20">
           Tokenomics
         </Link>
+      </div>
+      
+      {/* Social Media Links */}
+      <div className="flex items-center gap-4 mt-4 justify-center sm:justify-start">
+        <a 
+          href="https://x.com/chad_warriors" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-gray-300 hover:text-chad-pink transition-colors"
+        >
+          <FaTwitter className="text-xl" />
+          <span>@chad_warriors</span>
+        </a>
+        <a 
+          href="https://t.me/ChadEmpire_Official" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-gray-300 hover:text-chad-neon transition-colors"
+        >
+          <FaTelegram className="text-xl" />
+          <span>@ChadEmpire_Official</span>
+        </a>
       </div>
     </div>
   );
