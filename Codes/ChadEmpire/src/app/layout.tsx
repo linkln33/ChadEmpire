@@ -1,13 +1,30 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Orbitron, Share_Tech_Mono } from 'next/font/google'
 import './globals.css'
 import '@/styles/wallet-override.css'
 import { WalletProvider } from '@/components/wallet/WalletProvider'
 import Navigation from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
+import GlobalBackground from '@/components/effects/GlobalBackground'
 import MusicPlayer from '@/components/music/MusicPlayer'
 
 const inter = Inter({ subsets: ['latin'] })
+
+// Load Orbitron font - a futuristic Google font
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-orbitron',
+  display: 'swap',
+})
+
+// Load Share Tech Mono font - perfect for typewriter effect
+const shareTechMono = Share_Tech_Mono({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-share-tech-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'ChadEmpire - Spin like a Chad, Win like a Legend',
@@ -51,11 +68,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${orbitron.variable} ${shareTechMono.variable}`}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <script src="/scripts/sticky-player.js" defer></script>
       </head>
-      <body className={`${inter.className} bg-gray-900 text-white min-h-screen flex flex-col`}>
+      <body className={`${inter.className} text-white min-h-screen flex flex-col`}>
+        <GlobalBackground />
         <WalletProvider>
           <div className="flex flex-col min-h-screen">
             <Navigation />
