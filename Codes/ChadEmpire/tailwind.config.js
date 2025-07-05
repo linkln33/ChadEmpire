@@ -16,6 +16,14 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        'staravenue': ['StarAvenue', 'sans-serif'],
+        'game-of-squids': ['Game Of Squids', 'sans-serif'],
+        'starshines': ['Starshines', 'sans-serif'],
+        'future-tech': ['Future Tech', 'sans-serif'],
+        'playful': ['Playful', 'sans-serif'],
+        'creato': ['CreatoDisplay', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -47,10 +47,37 @@
   font-display: block;
 }
 
+/* Playful Font */
+@font-face {
+  font-family: 'Playful';
+  src: url('/fonts/Playful.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* CreatoDisplay-Medium Font */
+@font-face {
+  font-family: 'CreatoDisplay';
+  src: url('/fonts/CreatoDisplay-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+
 /* White On Black Font */
 @font-face {
   font-family: 'White On Black';
   src: url('/fonts/White On Black.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* StarAvenue Font */
+@font-face {
+  font-family: 'StarAvenue';
+  src: url('/fonts/staravenue.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -95,7 +122,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-playful;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
