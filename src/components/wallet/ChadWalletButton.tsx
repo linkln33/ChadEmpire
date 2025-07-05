@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletName, WalletReadyState } from '@solana/wallet-adapter-base';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+// Remove dependency on useWalletModal
 import { formatWalletAddress } from '@/lib/solana';
 
 export const ChadWalletButton: React.FC = () => {
   const { wallets, select, disconnect, connecting, connected, publicKey } = useWallet();
-  const { visible, setVisible } = useWalletModal();
+  // Manage modal visibility internally instead of using useWalletModal
+  const [visible, setVisible] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
 
   // Format the wallet address for display
@@ -18,6 +19,11 @@ export const ChadWalletButton: React.FC = () => {
   const handleWalletClick = (walletName: WalletName) => {
     select(walletName);
     setVisible(false);
+    // Add a small delay to allow the wallet adapter to process the selection
+    setTimeout(() => {
+      // If the wallet requires redirection (like Phantom), this will give time for the redirect
+      console.log('Wallet selected:', walletName);
+    }, 200);
   };
 
   // Toggle the Chad's Way info

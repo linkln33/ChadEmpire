@@ -1,10 +1,20 @@
-/* Hide the default Solana wallet adapter buttons */
+/* Hide ALL default Solana wallet adapter UI elements */
 .wallet-adapter-button-trigger,
-.wallet-adapter-button {
+.wallet-adapter-button:not([class*="ChadWalletButton"]),
+.wallet-adapter-modal,
+.wallet-adapter-modal-wrapper,
+.wallet-adapter-modal-container,
+.wallet-adapter-modal-overlay {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-/* Only show our custom ChadWalletButton */
-.wallet-adapter-modal-wrapper {
-  z-index: 1000;
+/* Only allow our custom wallet UI to be visible */
+.fixed.inset-0.flex.items-center.justify-center.z-50.bg-black\/70.backdrop-blur-sm {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }

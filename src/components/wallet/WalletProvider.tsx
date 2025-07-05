@@ -3,13 +3,13 @@
 import { FC, ReactNode, useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+// Create a custom modal provider that doesn't render the default UI
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 
-// Import the styles for the wallet adapter
-import '@solana/wallet-adapter-react-ui/styles.css';
-// Import our override styles to hide the default button
+// We're not using the default wallet adapter UI styles
+// import '@solana/wallet-adapter-react-ui/styles.css';
+// Import our custom styles
 import '@/styles/wallet-override.css';
 
 export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -34,9 +34,8 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <SolanaWalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
+        {/* We're not using the default WalletModalProvider */}
+        {children}
       </SolanaWalletProvider>
     </ConnectionProvider>
   );
