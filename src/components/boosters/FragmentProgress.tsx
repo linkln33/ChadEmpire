@@ -11,6 +11,7 @@ export function FragmentProgress({ fragment }: FragmentProgressProps) {
   const { addBooster, updateFragmentQuantity } = useUserStore();
   const [isMinting, setIsMinting] = useState(false);
   
+  
   const handleMintBooster = async () => {
     if (fragment.quantity < 5 || isMinting) return;
     
